@@ -1,0 +1,97 @@
+.include beta.uasm
+.include lab5checkoff.uasm
+
+count_bull_cows:
+    PUSH(LP)
+    PUSH(BP)
+    MOVE(SP, BP)
+    PUSH(R2) ||a
+    PUSH(R3) ||b
+    PUSH(R4) ||cows
+    PUSH(R5) ||bulls
+    PUSH(R6) ||i
+    PUSH(R7) ||j
+    PUSH(R8) ||btemp
+    PUSH(R9) ||atry
+    PUSH(R10) ||btry
+    PUSH(R11) ||mask
+    PUSH(R12) ||Compare result
+    PUSH(R13) ||Compare result
+    PUSH(R14) ||Compare result
+    LD(BP, -12, R2) || load a
+    LD(BP, -16, R3) || load b
+
+    CMOVE(0xF, R11) || mask = 0xF
+    CMOVE(0, R5) ||bulls = 0
+    CMOVE(0, R6) || i = 0
+    BR(endfor1)
+for1:
+    AND(R2,R11,R13) ||a & mask then store the reslut into R13
+    AND(R3,R11,R14) ||b & mask then store the reslut into R14
+    CMPEQ(R13, R14, R12) || R13 == R14 then R12 = 1
+    BEQ(R12, endif1) || jump to endif1 if R12 = 0
+    ADDC(R5, 1, R5) || bulls++
+    OR(R2, R11, 2) || a = a | mask
+    OR(R3, R11, R3) || b = b | mask
+endif1:
+    SHLC(R11, 4, R11) || mask = mask << 4
+    ADDC(R6, 1, R6) || i++
+endfor1:
+    CMPLTC(R6,4,R12) || R6 < 4 -> R12 = 1
+    BNE(R12, for1) ||jump to for1 if R12 not equal to 0
+
+    CMOVE(0,R4) || cows = 0
+    CMOVE(0,R6) || i = 0
+    BR(endfor2)
+for2:
+    ANDC(R2, 0xF, R9) ||get the next digit from a
+    SRAC(R2, 4, R2) || a = a >> 4
+    CMPEQC(R9, 0xF, R12) || R9 == 0xF -> R12 = 1
+    BNE(R12, endif2) ||jump to endif2 if R12 = 1
+    MOVE(R3, R8) ||btemp = b
+    CMOVE(0xF, R11) || mask = 0xF
+    CMOVE(0, R7) || j = 0
+    BR(endfor3) 
+for3:
+    ANDC(R8, 0xF, R10) ||btry = btem & 0xF
+    SRAC(R8, 4, R8) || btemp = btemp >> 4
+    CMPEQ(R10, R9, R14) || compare btry and atry
+    BEQ(R14, endif3) ||jump to endif3 if btry != atry
+    ADDC(R4, 1, R4) ||cows++
+    OR(R3, R11, R3) || b = b | mask
+    BR(endif2)
+endif3:
+    SHLC(R11, 4, R11) || mask = mask << 4
+    ADDC(R7, 1, R7) ||j++
+endfor3:
+    CMPLTC(R7, 4, R13) || R7 < 4 -> R13 = 1
+    BNE(R13, for3) || jump to for3 if j < 4
+endif2:
+    ADDC(R6, 1, R6) ||i++
+endfor2:
+    CMPLTC(R6, 4, R12) ||i < 4 -> R12 = 1
+    BNE(R12, for2) || jump to for2 if R12 != 0
+
+    SHLC(R5, 4, R0)
+    ADD(R0, R4, R0)
+
+
+    POP(R14)
+    POP(R13)
+    POP(R12)
+    POP(R11)
+    POP(R10)
+    POP(R9)
+    POP(R8)
+    POP(R7)
+    POP(R6)
+    POP(R5)
+    POP(R4)
+    POP(R3)
+    POP(R2)
+    MOVE(BP, SP)
+    POP(BP)
+    POP(LP)
+    RTN()
+StackBase: LONG(.+4)
+. = .+0x1000
